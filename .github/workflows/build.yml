@@ -3,10 +3,10 @@ name: Build
 on:
   # Build on new commits or pull requests.
   push:
-  pull_request:
-  schedule:
+  #pull_request:
+  #schedule:
     # Run every week just to make sure the CI environment still works.
-    - cron: '0 0 * * 0'
+    #- cron: '0 0 * * 0'
 
 env:
   DOTNET_VERSION: 6.0.x
