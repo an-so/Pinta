@@ -18,8 +18,21 @@ jobs:
       uses: actions/setup-dotnet@v1
       with:
         dotnet-version: ${{env.DOTNET_VERSION}}
-    - name: Build
-      run: dotnet build Pinta.sln --configuration Release
+    - name: Install SonarCloud scanner
+      shell: powershell
+      run: |
+        New-Item -Path .\.sonar\scanner -ItemType Directory
+        dotnet tool install --tool-path .\.sonar\scanner --version 5.0.0 dotnet-sonarscanner
+        #dotnet tool update dotnet-sonarscanner --tool-path .\.sonar\scanner --version 5.0.0
+    - name: Build and analyze
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      shell: powershell
+      run: |
+        .\.sonar\scanner\dotnet-sonarscanner begin /k:"an-so_Pinta" /o:"an-so" /d:sonar.login="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="https://sonarcloud.io"
+        dotnet build Pinta.sln --configuration Release
+        .\.sonar\scanner\dotnet-sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
     - name: Test
       run: dotnet test Pinta.sln --configuration Release
 
