@@ -22,7 +22,7 @@ jobs:
       shell: powershell
       run: |
         New-Item -Path .\.sonar\scanner -ItemType Directory
-        dotnet tool install --tool-path .\.sonar\scanner --version ${{env.DOTNET_VERSION}} dotnet-sonarscanner
+        dotnet tool install --tool-path .\.sonar\scanner dotnet-sonarscanner
         #dotnet tool update dotnet-sonarscanner --tool-path .\.sonar\scanner --version 5.0.0
     - name: Build and analyze
       env:
