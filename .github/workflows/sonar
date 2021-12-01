@@ -1,0 +1,37 @@
+name: Build
+
+on:
+  # Build on new commits.
+  push:
+
+env:
+  DOTNET_VERSION: 6.0.x
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - uses: microsoft/setup-msbuild@v1.0.2
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: ${{env.DOTNET_VERSION}}
+    - name: Build
+      run: dotnet build Pinta.sln --configuration Release
+    - name: Test
+      run: dotnet test Pinta.sln --configuration Release
+
+    # Note that msgfmt is already available from the Git for Windows installation!
+    - name: Build Installer
+      run: |
+        dotnet publish Pinta.sln -p:BuildTranslations=true --configuration Release -r win-x64 --self-contained true
+        iscc installer/windows/installer.iss
+
+    - name: Upload Installer
+      uses: actions/upload-artifact@v2
+      with:
+        name: "Pinta.exe"
+        path: installer/windows/Pinta.exe
+        if-no-files-found: error
