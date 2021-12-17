@@ -22,14 +22,11 @@ def collect_libs(src_lib, lib_deps):
     referenced_paths = re.findall(OTOOL_LIB_REGEX, output)
     real_lib_paths = set([os.path.realpath(lib) for lib in referenced_paths])
 
-    new_libs = []
+    lib_deps[src_lib] = referenced_paths
+
     for lib in real_lib_paths:
         if lib not in lib_deps:
-            new_libs.append(lib)
-            lib_deps[lib] = referenced_paths
-
-    for lib in new_libs:
-        collect_libs(lib, lib_deps)
+            collect_libs(lib, lib_deps)
 
 parser = argparse.ArgumentParser(description='Bundle the GTK libraries.')
 parser.add_argument('--install_dir',
@@ -39,7 +36,7 @@ parser.add_argument('--install_dir',
 args = parser.parse_args()
 
 lib_deps = {}
-collect_libs(ROOT_LIB, lib_deps)
+collect_libs(os.path.realpath(ROOT_LIB), lib_deps)
 
 for lib, deps in lib_deps.items():
     lib_copy = shutil.copy(lib, args.install_dir)
@@ -52,6 +49,10 @@ for lib, deps in lib_deps.items():
         dep_lib = os.path.basename(os.path.realpath(dep_path))
         cmd = ['install_name_tool', '-change', dep_path, dep_lib, lib_copy]
         subprocess.check_output(cmd)
+
+# Add the libgdk symlink that GtkSharp needs.
+os.symlink("libgdk_pixbuf-2.0.0.dylib",
+           os.path.join(args.install_dir, "libgdk_pixbuf-2.0.dylib"))
 
 # Copy translations and icons.
 gtk_root = os.path.join(os.path.dirname(os.path.realpath(ROOT_LIB)), "..")
